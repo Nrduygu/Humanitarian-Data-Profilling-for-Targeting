@@ -1,0 +1,94 @@
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(rc={'figure.figsize':(16,8)})
+
+data_folder = '~/duyguketen/profiling_scripts'
+%cd $data_folder
+
+df1_df = pd.read_csv('profilling.csv')
+vulnerability_df = pd.read_csv('vulnerability.csv')
+
+# Take relevant columns from the PDM dataframe and renaming them # 
+
+df1_df = df1_df[[
+'aspb',
+'boys0to1',
+'boys2to5',
+'boys6to12',
+'boys13to17',
+'men18to59',
+'menOver60',
+'girls0to1',
+'girls2to5',
+'girls6to12',
+'girls13to17',
+'women18to59',
+'womenOver60'
+]]
+
+df1_df.rename(columns = {
+'boys0to1': 'male-0to1',
+'boys2to5': 'male-2to5',
+'boys6to12': 'male-6to12',
+'boys13to17': 'male-13to17',
+'men18to59': 'male-18to59',
+'menOver60': 'male-60above',
+'girls0to1': 'female-0to1',
+'girls2to5': 'female-2to5',
+'girls6to12': 'female-6to12',
+'girls13to17': 'female-13to17',
+'women18to59': 'female-18to59',
+'womenOver60': 'female-60above'
+}, inplace=True)
+
+# merge with vulnerbility #
+
+df1_vulnerability =df1_df.merge(vulnerability_df, on='aspb')
+
+# look at the dataset
+
+df1_vulnerability.head()
+
+df1_vulnerability.describe()
+
+## Calculate individual vulnerability of age and gender groups as the mean vulnerability level of households which contain at least 1 individual of that group
+
+age_gender_groups = [
+'male-0to1',
+'male-2to5',
+'male-6to12',
+'male-13to17',
+'male-18to59',
+'male-60above',
+'female-0to1',
+'female-2to5',
+'female-6to12',
+'female-13to17',
+'female-18to59',
+'female-60above'
+]
+
+vulnerabilities = []
+
+def calculate_individual_vulnerability(group):
+    return pdm_vulnerability[pdm_vulnerability[group] > 0].vulnerability_level.mean()
+
+for age_gender_group in age_gender_groups:
+    vulnerabilities.append((age_gender_group, calculate_individual_vulnerability(age_gender_group)))
+
+vulnerabilities.sort(key=lambda x: x[1], reverse=True)
+
+ax = sns.barplot(x=[v[0] for v in vulnerabilities], y=[v[1] for v in vulnerabilities])
+ax.set(title='Average vulnerability of households containing at least 1 individual of particular groups')
+ax.set(ylim=(0.45, 0.65))
+plt.show()
+
+## calculate vulnerbailty dscore
+
+print(f1_score(highly_vulnerable, linear_regression.predict(pdm_vulnerability[age_gender_groups])))
+
